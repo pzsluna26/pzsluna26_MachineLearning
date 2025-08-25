@@ -1,0 +1,83 @@
+# 타이타닉
+
+## 1.
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import (
+    accuracy_score, precision_score, recall_score, f1_score,
+    confusion_matrix, classification_report, roc_auc_score
+)
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+plt.rcParams['font.family'] = 'Malgun Gothic'
+plt.rcParams['axes.unicode_minus'] = False
+plt.figure(figsize=(10, 6))
+
+## 2.
+def preprocess(file_path='data/titanic.csv'):
+    """빠른 데이터 전처리"""
+    df = pd.read_csv(file_path)
+    
+    # 필수 전처리만 수행
+    df['Sex'] = df['Sex'].map({'male': 0, 'female': 1})
+    df['Age'] = df['Age'].fillna(df['Age'].median())
+    df['Embarked'] = df['Embarked'].fillna('S')
+    df['Embarked'] = df['Embarked'].map({'S': 0, 'C': 1, 'Q': 2})
+    df['Fare'] = df['Fare'].fillna(df['Fare'].median())
+    
+    # 특성 선택
+    features = ['Pclass', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare', 'Embarked']
+    X = df[features]
+    y = df['Survived']
+    
+    return X, y
+
+
+## 3
+def plot_confusion_matrix(cm, model_name):
+    """혼동 행렬 시각화"""
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+                xticklabels=['사망', '생존'], 
+                yticklabels=['사망', '생존'],
+                cbar_kws={'label': '예측 수'})
+    plt.title(f'{model_name} - 혼동 행렬')
+    plt.xlabel('예측')
+    plt.ylabel('실제')
+    plt.show()
+
+def plot_metrics_comparison(results_dict):
+    """여러 모델의 지표 비교"""
+    metrics = ['accuracy', 'precision', 'recall', 'f1', 'roc_auc']
+    models = list(results_dict.keys())
+    
+    fig, ax = plt.subplots(figsize=(12, 6))
+    
+    x = np.arange(len(metrics))
+    width = 0.35
+    
+    for i, model in enumerate(models):
+        values = [results_dict[model][metric] for metric in metrics]
+        ax.bar(x + i*width, values, width, label=model, alpha=0.8)
+    
+    ax.set_xlabel('평가 지표')
+    ax.set_ylabel('점수')
+    ax.set_title('모델별 성능 비교')
+    ax.set_xticks(x + width/2)
+    ax.set_xticklabels(['정확도', '정밀도', '재현율', 'F1', 'ROC-AUC'])
+    ax.legend()
+    ax.set_ylim(0, 1)
+    
+    # 값 표시
+    for i, model in enumerate(models):
+        values = [results_dict[model][metric] for metric in metrics]
+        for j, v in enumerate(values):
+            ax.text(j + i*width, v + 0.01, f'{v:.3f}', 
+                   ha='center', va='bottom', fontsize=9)
+    
+    plt.tight_layout()
+    plt.show()
