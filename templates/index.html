@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>감정분석</h1>
+    <textarea id ="text-input" placeholder="리뷰를 입력해주세용"></textarea>
+    <button onclick="analyze()">분석하기</button>
+    <div id ="result"></div>
+    <script>
+        async function analyze(){
+        const text = document.getElementById("text-input").value;
+            const resultDiv = document.getElementById("result")
+
+            if (!text.trim()){
+                alert("리뷰를 입력해주세요")
+                return
+            }
+            try {
+                const response = await fetch('http://127.0.0.1:8000/predict',{
+                    method : 'POST',
+                    headers : {
+                        'Content-Type' : 'application/json',
+                    },
+                    body : JSON.stringify({text: text})
+                })
+                const data = await response.json()
+                if(!response.ok){
+                    throw new Error(data.error || 'API에 문제가 있습니다.')
+                }
+                if(data.emotion ==1) resultDiv.textContent = "긍정적인 리뷰입니다."
+                else resultDiv.textContent = "부정적인 리뷰입니다."
+            } catch(error) {
+                resultDiv.textContent = `오류 : ${error.message}` 
+            }
+        }
+    </script>
+</body>
+</html>
